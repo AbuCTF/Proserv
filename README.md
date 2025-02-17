@@ -3,7 +3,7 @@ Codebase for the project `IoT-Driven Hydraulic Actuation and Monitoring System w
 ```
 Developers:
 
-Raghu [Hardware]
-Sahal [Dual]
-Abdur [Cloud]
+Raghunath V M [Hardware]
+Muhammed Sahal M N [Dual]
+Abdur Rahman [Cloud]
 ```
