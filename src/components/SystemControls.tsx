@@ -1,7 +1,7 @@
 // src/components/SystemControls.tsx
 'use client';
 import { useState } from 'react';
-import { Power, Play, Pause } from 'lucide-react';
+import { Power, Play, Pause, Activity } from 'lucide-react';
 import { PumpStatus } from '@/types';
 
 interface SystemControlsProps {
@@ -11,6 +11,7 @@ interface SystemControlsProps {
 export const SystemControls: React.FC<SystemControlsProps> = ({ onPumpStatusChange }) => {
   const [pumpState, setPumpState] = useState<PumpStatus>('stopped');
   const [sovState, setSovState] = useState<'closed' | 'open'>('closed');
+  const [lastControlSource, setLastControlSource] = useState<'manual' | 'auto'>('manual');
 
   const simulateRelaySignal = () => {
     // Simulating realistic relay signal generation
@@ -22,8 +23,9 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ onPumpStatusChan
     if (relaySignal) {
       const newStatus: PumpStatus = 'running';
       setPumpState(newStatus);
+      setLastControlSource('manual');
       onPumpStatusChange(newStatus);
-      console.log('Pump Start Signal Generated');
+      console.log('Pump Start Signal Generated (Manual)');
     }
   };
 
@@ -32,8 +34,9 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ onPumpStatusChan
     if (relaySignal) {
       const newStatus: PumpStatus = 'stopped';
       setPumpState(newStatus);
+      setLastControlSource('manual');
       onPumpStatusChange(newStatus);
-      console.log('Pump Stop Signal Generated');
+      console.log('Pump Stop Signal Generated (Manual)');
     }
   };
 
@@ -44,6 +47,11 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ onPumpStatusChan
       console.log('SOV Toggle Signal Generated');
     }
   };
+
+  // Update the pump state when changed externally (by auto control)
+  if (pumpState !== 'running' && pumpState !== 'stopped') {
+    setPumpState('stopped');
+  }
 
   return (
     <section className="bg-white rounded-xl p-6 shadow-lg">
