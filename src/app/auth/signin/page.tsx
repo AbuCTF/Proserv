@@ -1,10 +1,8 @@
 'use client';
+
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { ProservLogo } from '@/components/ProservLogo';
-
-// Define allowed admin emails
-const ALLOWED_ADMIN_EMAILS = ['aburahman918@gmail.com'];
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -13,28 +11,23 @@ export default function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email) {
       setError('Email is required');
       return;
     }
-    
-    // Check if email is allowed (either @proserv.com or in admin list)
-    if (!email.endsWith('@proserv.com') && !ALLOWED_ADMIN_EMAILS.includes(email)) {
-      setError('Only @proserv.com email addresses or authorized admin emails are allowed');
-      return;
-    }
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       const result = await signIn('email', {
         email,
         callbackUrl: '/',
-        redirect: true, // This will automatically redirect to verify-request
+        redirect: true, // will redirect to /verify-request
       });
-      
-      // This code will only run if there's an immediate error since redirect is true
+
+      // This part will only run if there's an immediate error
       if (result?.error) {
         setError(result.error);
       }
@@ -54,7 +47,7 @@ export default function SignIn() {
             Sign in to Proserv SSV Control Panel
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Use your @proserv.com email to sign in
+            Use your @proserv.com email or an authorized admin email
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
