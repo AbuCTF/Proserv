@@ -13,7 +13,7 @@
     "@prisma/client": "^6.4.1",
     "dotenv": "^16.4.7",
     "lucide-react": "^0.469.0",
-    "next": "15.1.2",
+    "next": "^15.2.3",
     "next-auth": "^4.24.11",
     "nodemailer": "^6.10.0",
     "prisma": "^6.4.1",
