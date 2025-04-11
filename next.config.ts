@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  reactStrictMode: true,
 };
 
 export default nextConfig;

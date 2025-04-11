@@ -1,6 +1,7 @@
 // app/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { ProservLogo } from '@/components/ProservLogo';
 import { SystemControls } from '@/components/SystemControls';
 import { SystemStatus } from '@/components/SystemStatus';
@@ -8,9 +9,12 @@ import { PressureGraph } from '@/components/PressureGraph';
 import { TransmitterSetpointControl } from '@/components/TransmitterSetpointControl';
 import { TransmitterValueDisplay } from '@/components/TransmitterValueDisplay';
 import { AutoPumpControl } from '@/components/AutoPumpControl';
+import { LogoutButton } from '@/components/LogoutButton';
 import { Setpoints, PumpStatus } from '@/types';
 
 export default function Home() {
+  const { data: session } = useSession();
+  
   // State for pressures and setpoints
   const [pumpPressure, setPumpPressure] = useState<number>(0);
   const [flowlinePressure, setFlowlinePressure] = useState<number>(0);
@@ -66,8 +70,18 @@ export default function Home() {
   return (
     <main className="container mx-auto px-4 py-4 sm:py-8 max-w-7xl">
       <header className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 gap-3">
-        <ProservLogo size={80} />
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-center sm:text-right">Proserv SSV Control Panel</h1>
+        <div className="flex items-center">
+          <ProservLogo size={80} />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold ml-4">Proserv SSV Control Panel</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          {session?.user?.email && (
+            <div className="text-sm text-gray-600">
+              Logged in as: <span className="font-semibold">{session.user.email}</span>
+            </div>
+          )}
+          <LogoutButton />
+        </div>
       </header>
       
       <TransmitterValueDisplay
