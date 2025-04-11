@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   // Image config to prevent issues
   images: {
     domains: [], // Optional — only needed if using remote images
-    unoptimized: false,
+    unoptimized: true,
   },
 };
 
