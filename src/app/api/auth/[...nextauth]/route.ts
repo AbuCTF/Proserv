@@ -8,7 +8,10 @@ import nodemailer from "nodemailer";
 const prisma = new PrismaClient();
 
 // Define allowed admin emails - use environment variable if available
-const ALLOWED_ADMIN_EMAILS = process.env.ALLOWED_ADMIN_EMAILS?.split(',') || ['aburahman918@gmail.com', 'sahalmn02@gmail.com'];
+const ALLOWED_ADMIN_EMAILS = (process.env.ALLOWED_ADMIN_EMAILS || '')
+  .split(',')
+  .map(email => email.trim())
+  .filter(Boolean);
 
 // Create the auth handler
 const handler = NextAuth({
