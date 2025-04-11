@@ -7,10 +7,10 @@ import nodemailer from "nodemailer";
 // Reuse PrismaClient to prevent multiple instances
 const prisma = new PrismaClient();
 
-// Define allowed admin emails - use environment variable if available
-const ALLOWED_ADMIN_EMAILS = (process.env.ALLOWED_ADMIN_EMAILS || '')
-  .split(',')
-  .map(email => email.trim())
+// Safely parse and normalize allowed admin emails
+const ALLOWED_ADMIN_EMAILS = (process.env.ALLOWED_ADMIN_EMAILS || "")
+  .split(",")
+  .map(email => email.trim().toLowerCase())
   .filter(Boolean);
 
 // Create the auth handler
@@ -28,10 +28,14 @@ const handler = NextAuth({
       },
       from: process.env.EMAIL_FROM,
       async sendVerificationRequest({ identifier: email, url, provider }) {
-        // Check if email is allowed (either @proserv.com or in admin list)
-        if (!email.endsWith("@proserv.com") && !ALLOWED_ADMIN_EMAILS.includes(email)) {
+        const normalizedEmail = email.trim().toLowerCase();
+        if (
+          !normalizedEmail.endsWith("@proserv.com") &&
+          !ALLOWED_ADMIN_EMAILS.includes(normalizedEmail)
+        ) {
           throw new Error("Only @proserv.com email addresses or authorized admin emails are allowed");
         }
+
         const transporter = nodemailer.createTransport(provider.server);
         await transporter.sendMail({
           to: email,
@@ -50,24 +54,26 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
-      // This is crucial - check both the email domain AND the admin emails
+    async signIn({ user }) {
       if (user.email) {
-        return user.email.endsWith("@proserv.com") || ALLOWED_ADMIN_EMAILS.includes(user.email);
+        const normalizedEmail = user.email.trim().toLowerCase();
+        return (
+          normalizedEmail.endsWith("@proserv.com") ||
+          ALLOWED_ADMIN_EMAILS.includes(normalizedEmail)
+        );
       }
       return false;
     },
     async redirect({ url, baseUrl }) {
-      // Make sure we properly handle redirects
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
-    async session({ session, token, user }) {
+    async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub ?? "";
       }
       return session;
     },
-    async jwt({ token, user, account, profile, isNewUser }) {
+    async jwt({ token, user }) {
       if (user) {
         token.email = user.email;
       }
