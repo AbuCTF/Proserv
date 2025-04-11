@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import EmailProvider from "next-auth/providers/email";
@@ -7,10 +7,11 @@ import nodemailer from "nodemailer";
 // Reuse PrismaClient to prevent multiple instances
 const prisma = new PrismaClient();
 
-// Define allowed admin emails
-const ALLOWED_ADMIN_EMAILS = process.env.ALLOWED_ADMIN_EMAILS?.split(',') || [];;
+// Define allowed admin emails - use environment variable if available
+const ALLOWED_ADMIN_EMAILS = process.env.ALLOWED_ADMIN_EMAILS?.split(',') || ['aburahman918@gmail.com', 'sahalmn02@gmail.com'];
 
-export const authOptions: NextAuthOptions = {
+// Create the auth handler
+const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
@@ -28,7 +29,6 @@ export const authOptions: NextAuthOptions = {
         if (!email.endsWith("@proserv.com") && !ALLOWED_ADMIN_EMAILS.includes(email)) {
           throw new Error("Only @proserv.com email addresses or authorized admin emails are allowed");
         }
-        
         const transporter = nodemailer.createTransport(provider.server);
         await transporter.sendMail({
           to: email,
@@ -80,12 +80,9 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
-  },
+  secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development' && process.env.DEBUG_AUTH === 'true',
-};
+});
 
 // Export named handlers for each HTTP method
-const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
