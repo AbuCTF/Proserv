@@ -16,7 +16,7 @@
     "recharts": "^2.15.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^20.17.30",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8",

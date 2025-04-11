@@ -1,7 +1,7 @@
-// src/components/AutoPumpControl.tsx
-'use client';
-import { useEffect, useState } from 'react';
-import { Setpoints, PumpStatus } from '@/types';
+// src/components/AutoPumpControl.tsx - Updated
+"use client";
+import { useEffect, useState } from "react";
+import { Setpoints, PumpStatus } from "@/types";
 
 interface AutoPumpControlProps {
   pumpPressure: number;
@@ -14,38 +14,71 @@ export const AutoPumpControl: React.FC<AutoPumpControlProps> = ({
   pumpPressure,
   pumpSetpoints,
   pumpStatus,
-  onPumpStatusChange
+  onPumpStatusChange,
 }) => {
   const [isAutoEnabled, setIsAutoEnabled] = useState<boolean>(true);
-  const [lastAutoAction, setLastAutoAction] = useState<string>('');
-  const [lastActionTime, setLastActionTime] = useState<string>('');
-  
+  const [lastAutoAction, setLastAutoAction] = useState<string>("");
+  const [lastActionTime, setLastActionTime] = useState<string>("");
+  const [isESP32AutoControl, setIsESP32AutoControl] = useState<boolean>(true);
+
+  // Track auto control actions
   useEffect(() => {
-    if (!isAutoEnabled) return;
-    
-    // Auto-start pump when pressure falls below low setpoint
-    if (pumpPressure < pumpSetpoints.lowSetpoint && pumpStatus !== 'running') {
-      onPumpStatusChange('running');
-      const now = new Date().toLocaleTimeString();
-      setLastAutoAction('Auto-started pump due to low pressure');
+    if (!isAutoEnabled || isESP32AutoControl) return;
+
+    const now = new Date().toLocaleTimeString();
+
+    // Auto-start pump if pressure is too low
+    if (pumpPressure < pumpSetpoints.lowSetpoint && pumpStatus !== "running") {
+      onPumpStatusChange("running");
+      setLastAutoAction("Auto-started pump due to low pressure");
       setLastActionTime(now);
-      console.log('Auto-Control: Started pump due to low pressure');
     }
-    
-    // Auto-stop pump when pressure exceeds high setpoint
-    if (pumpPressure > pumpSetpoints.highSetpoint && pumpStatus === 'running') {
-      onPumpStatusChange('stopped');
-      const now = new Date().toLocaleTimeString();
-      setLastAutoAction('Auto-stopped pump due to high pressure');
+
+    // Auto-stop pump if pressure is too high
+    if (pumpPressure > pumpSetpoints.highSetpoint && pumpStatus === "running") {
+      onPumpStatusChange("stopped");
+      setLastAutoAction("Auto-stopped pump due to high pressure");
       setLastActionTime(now);
-      console.log('Auto-Control: Stopped pump due to high pressure');
     }
-  }, [pumpPressure, pumpSetpoints, pumpStatus, isAutoEnabled, onPumpStatusChange]);
-  
+  }, [
+    pumpPressure,
+    pumpSetpoints,
+    pumpStatus,
+    isAutoEnabled,
+    isESP32AutoControl,
+    onPumpStatusChange,
+  ]);
+
+  // Track pressure changes to detect automatic ESP32 actions
+  useEffect(() => {
+    const now = new Date().toLocaleTimeString();
+
+    // If ESP32 auto control is enabled, log automatic actions it takes
+    if (isESP32AutoControl && isAutoEnabled) {
+      if (
+        pumpStatus === "running" &&
+        lastAutoAction !== "ESP32 auto-started pump"
+      ) {
+        setLastAutoAction("ESP32 auto-started pump");
+        setLastActionTime(now);
+      } else if (
+        pumpStatus === "stopped" &&
+        lastAutoAction !== "ESP32 auto-stopped pump" &&
+        lastAutoAction !== ""
+      ) {
+        // Skip initial state
+        setLastAutoAction("ESP32 auto-stopped pump");
+        setLastActionTime(now);
+      }
+    }
+  }, [pumpStatus, isESP32AutoControl, isAutoEnabled, lastAutoAction]);
+
   return (
     <section className="bg-white rounded-xl p-4 sm:p-6 shadow-lg h-full">
-      <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Automatic Pump Control</h2>
-      
+      <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">
+        Automatic Pump Control
+      </h2>
+
       <div className="flex items-center mb-3 sm:mb-4">
         <input
           type="checkbox"
@@ -54,27 +87,66 @@ export const AutoPumpControl: React.FC<AutoPumpControlProps> = ({
           className="mr-2"
           id="auto-control-toggle"
         />
-        <label htmlFor="auto-control-toggle" className="font-semibold text-sm sm:text-base">Enable Auto Control</label>
+        <label
+          htmlFor="auto-control-toggle"
+          className="font-semibold text-sm sm:text-base"
+        >
+          Enable Auto Control
+        </label>
       </div>
-      
+
+      {isAutoEnabled && (
+        <div className="flex items-center mb-3 sm:mb-4">
+          <input
+            type="checkbox"
+            checked={isESP32AutoControl}
+            onChange={() => setIsESP32AutoControl(!isESP32AutoControl)}
+            className="mr-2"
+            id="esp32-control-toggle"
+          />
+          <label
+            htmlFor="esp32-control-toggle"
+            className="font-semibold text-sm sm:text-base"
+          >
+            Use ESP32 Auto Control
+          </label>
+        </div>
+      )}
+
       <div className="bg-gray-100 p-3 sm:p-4 rounded-lg text-sm sm:text-base">
         <p className="font-semibold">Auto Control Settings:</p>
         <ul className="mt-1 sm:mt-2 text-xs sm:text-sm">
-          <li>• Auto-start pump when pressure &lt; {pumpSetpoints.lowSetpoint} barg</li>
-          <li>• Auto-stop pump when pressure &gt; {pumpSetpoints.highSetpoint} barg</li>
+          <li>
+            • Auto-start pump when pressure &lt; {pumpSetpoints.lowSetpoint}{" "}
+            barg
+          </li>
+          <li>
+            • Auto-stop pump when pressure &gt; {pumpSetpoints.highSetpoint}{" "}
+            barg
+          </li>
         </ul>
       </div>
-      
+
       {lastAutoAction && (
         <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-xs sm:text-sm font-medium">{lastAutoAction}</p>
           <p className="text-xs text-gray-500">at {lastActionTime}</p>
         </div>
       )}
-      
+
       <div className="mt-3 sm:mt-4 flex items-center">
-        <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 ${isAutoEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-        <span className="text-xs sm:text-sm">{isAutoEnabled ? 'Auto Control Active' : 'Auto Control Disabled'}</span>
+        <div
+          className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 ${
+            isAutoEnabled ? "bg-green-500" : "bg-gray-400"
+          }`}
+        ></div>
+        <span className="text-xs sm:text-sm">
+          {isAutoEnabled
+            ? isESP32AutoControl
+              ? "ESP32 Auto Control Active"
+              : "Frontend Auto Control Active"
+            : "Auto Control Disabled"}
+        </span>
       </div>
     </section>
   );
