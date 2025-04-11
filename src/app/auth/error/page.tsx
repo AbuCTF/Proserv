@@ -1,4 +1,6 @@
 'use client';
+export const dynamic = 'force-dynamic';
+
 import { useSearchParams } from 'next/navigation';
 import { ProservLogo } from '@/components/ProservLogo';
 import Link from 'next/link';
